@@ -1,6 +1,7 @@
 module.exports = {
   extends: '@rocketseat/eslint-config/node',
   rules: {
+    '@typescript-eslint/no-unused-expressions': 'off',
     'no-useless-constructor': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     'n/no-path-concat': 'off',

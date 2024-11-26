@@ -1,11 +1,18 @@
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
-import { encryptPassword } from 'src/utils/encrypt/password'
-import { Inject, Injectable } from '@nestjs/common'
+import { encryptPassword, validatePassword } from 'src/utils/encrypt/password'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { User } from './entities/user.entity'
 import { Repository } from 'typeorm'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { UpdatePasswordDto } from './dto/update-password.dto'
+
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate'
 
 @Injectable()
 export class UsersService {
@@ -24,11 +31,47 @@ export class UsersService {
     return user
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find()
+  async findEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { email } })
+
+    if (!user) {
+      throw new NotFoundError(`Email: ${email} não existente!`)
+    }
+
+    return user
   }
 
-  async create(data: CreateUserDto): Promise<User> {
+  async findAll(
+    options: IPaginationOptions,
+    order: 'ASC' | 'DESC' = 'ASC',
+    id: string,
+    name: string,
+    email: string,
+    typeUser: number,
+    status: boolean,
+  ): Promise<Pagination<User>> {
+    const queryBuilder = this.userRepository.createQueryBuilder('u')
+
+    const user = await queryBuilder.select([
+      'u.id',
+      'u.name',
+      'u.email',
+      'u.typeUser',
+      'u.status',
+    ])
+
+    id && user.andWhere('u.id = :id', { id })
+    name && user.andWhere('u.name ILIKE :name', { name: `%${name}%` })
+    email && user.andWhere('u.email ILIKE :email', { email: `%${email}%` })
+    typeUser && user.andWhere('u.typeUser = :typeUser', { typeUser })
+    status !== undefined && user.andWhere('u.status = :status', { status })
+    order && user.orderBy('u.id', `${order}`)
+    user.withDeleted()
+
+    return paginate<User>(user, options)
+  }
+
+  async createCommon(data: CreateUserDto): Promise<User> {
     const { name, email, password } = data
 
     const cryptPassword = await encryptPassword(password)
@@ -39,14 +82,33 @@ export class UsersService {
       password: cryptPassword,
       typeUser: 1,
       createdAt: new Date(),
-      createdUser: 0,
+      createdUser: 'Comum',
     }
 
     const user = await this.userRepository.create(createUserData)
 
-    if (!user) {
-      throw new NotFoundError('Faltando campos preenchidos!')
+    if (!user) throw new NotFoundError('Faltando campos preenchidos!')
+
+    return this.userRepository.save(user)
+  }
+
+  async createAdmin(userId: string, data: CreateUserDto): Promise<User> {
+    const { name, email, password } = data
+
+    const cryptPassword = await encryptPassword(password)
+
+    const createUserData = {
+      name,
+      email: email.trim(),
+      password: cryptPassword,
+      typeUser: 1,
+      createdAt: new Date(),
+      createdUser: userId,
     }
+
+    const user = await this.userRepository.create(createUserData)
+
+    if (!user) throw new NotFoundError('Faltando campos preenchidos!')
 
     return this.userRepository.save(user)
   }
@@ -66,6 +128,30 @@ export class UsersService {
     })
   }
 
+  async updatePassword(userId: string, data: UpdatePasswordDto) {
+    const user = await this.findOne(userId)
+
+    const cryptNewPassword = await encryptPassword(data.newPassword)
+    const isMatch = await validatePassword(data.password, user.password)
+
+    if (!isMatch) {
+      throw new BadRequestException(
+        'Senha alterada, por favor verificar se está correta!',
+      )
+    }
+
+    if (data.newPassword !== data.confirmNewPassword) {
+      throw new NotFoundError(
+        'Nova senha e Confirmar nova senha estão diferentes!',
+      )
+    }
+
+    return this.userRepository.save({
+      ...user,
+      password: cryptNewPassword,
+    })
+  }
+
   async delete(id: string): Promise<User> {
     const user = await this.findOne(id)
 
@@ -82,10 +168,8 @@ export class UsersService {
   }
 
   async emailAlreadyExists(email: string): Promise<boolean> {
-    const user = await this.userRepository.findOneBy({ email })
-    if (user !== null) {
-      return true
-    }
-    return false
+    const existingUserEmail = await this.userRepository.findOneBy({ email })
+
+    return !existingUserEmail
   }
 }

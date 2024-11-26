@@ -12,36 +12,36 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'varchar' })
   name: string
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'varchar' })
   email: string
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'varchar' })
   password: string
 
-  @Column({ name: 'type_user', nullable: false })
+  @Column({ name: 'type_user', nullable: false, type: 'integer' })
   typeUser: number
 
-  @Column({ default: true })
+  @Column({ default: true, type: 'boolean' })
   status: boolean
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date
 
-  @Column({ name: 'created_user', type: 'integer' })
-  createdUser!: number
+  @Column({ name: 'created_user', type: 'varchar' })
+  createdUser!: string
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', nullable: true })
   updatedAt: Date
 
-  @Column({ name: 'updated_user', type: 'integer', nullable: true })
+  @Column({ name: 'updated_user', type: 'varchar', nullable: true })
   updatedUser!: number
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt: Date
 
-  @Column({ name: 'deleted_user', type: 'integer', nullable: true })
+  @Column({ name: 'deleted_user', type: 'varchar', nullable: true })
   deletedUser!: number
 }

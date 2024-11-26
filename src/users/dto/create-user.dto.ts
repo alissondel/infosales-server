@@ -1,5 +1,4 @@
 import { IsEmail, IsString, Length } from 'class-validator'
-import { EmailAlreadyExistsValidator } from '../validators/email-is-unique.validator'
 
 export class CreateUserDto {
   @IsString({ message: 'Nome invalido!' })
@@ -9,9 +8,6 @@ export class CreateUserDto {
   readonly name: string
 
   @IsEmail({}, { message: 'E-mail inválido' })
-  @EmailAlreadyExistsValidator({
-    message: 'Já existe um usuário com este e-mail',
-  })
   readonly email: string
 
   @IsString({ message: 'Senha deve ser uma string' })

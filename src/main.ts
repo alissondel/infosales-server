@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
-import { useContainer } from 'class-validator'
+// import { useContainer } from 'class-validator'
 
 import { AppModule } from './app.module'
 import { ConflictInterceptor } from './commom/errors/interceptors/conflict.interceptors'
 import { UnauthorizedInterceptor } from './commom/errors/interceptors/unauthorized.interceptors'
 import { NotFoundInterceptor } from './commom/errors/interceptors/notfound.interceptors'
+import { ValidationPipe } from '@nestjs/common'
 
 const port = normalizePort(process.env.SERVER_PORT || '3001')
 
@@ -21,8 +21,6 @@ async function bootstrap() {
       whitelist: true,
     }),
   )
-
-  useContainer(app.select(AppModule), { fallbackOnErrors: true })
 
   app.useGlobalInterceptors(new ConflictInterceptor())
   app.useGlobalInterceptors(new UnauthorizedInterceptor())

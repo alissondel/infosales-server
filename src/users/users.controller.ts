@@ -2,10 +2,19 @@ import { User } from './entities/user.entity'
 import { Roles } from 'src/decorators/roles.decorator'
 import { UserId } from 'src/decorators/user-id-decorator'
 import { UserType } from './enum/user-type.enum'
+import { Pagination } from 'nestjs-typeorm-paginate'
 import { UsersService } from './users.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { UpdatePasswordDto } from './dto/update-password.dto'
+
+import {
+  ReturnUserDto,
+  ReturnUserUpdatedDto,
+  ReturnUserDeletedDto,
+} from './dto/return-user.dto'
+
 import {
   Body,
   Controller,
@@ -16,8 +25,6 @@ import {
   Delete,
   Query,
 } from '@nestjs/common'
-import { Pagination } from 'nestjs-typeorm-paginate'
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 
 @Controller('users')
 export class UsersController {
@@ -25,14 +32,14 @@ export class UsersController {
 
   @Roles(UserType.Common, UserType.Root, UserType.Admin)
   @Get('/userId')
-  async userTokenId(@UserId() userId: string): Promise<User> {
-    return await this.usersService.findOne(userId)
+  async userTokenId(@UserId() userId: string): Promise<ReturnUserDto> {
+    return new ReturnUserDto(await this.usersService.findOne(userId))
   }
 
   @Roles(UserType.Admin)
   @Get(':id')
-  async userById(@Param('id') id: string): Promise<User> {
-    return await this.usersService.findOne(id)
+  async userById(@Param('id') id: string): Promise<ReturnUserDto> {
+    return new ReturnUserDto(await this.usersService.findOne(id))
   }
 
   @Roles(UserType.Admin)
@@ -61,9 +68,7 @@ export class UsersController {
 
   @Post('/create-user-common')
   async createUserCommon(@Body() data: CreateUserDto): Promise<User> {
-    const { email } = data
-
-    const isEmailUnique = await this.usersService.emailAlreadyExists(email)
+    const isEmailUnique = await this.usersService.emailAlreadyExists(data.email)
 
     if (!isEmailUnique) throw new NotFoundError('Este e-mail já está em uso.')
 
@@ -72,20 +77,19 @@ export class UsersController {
 
   @Roles(UserType.Admin)
   @Post('/create-user-admin')
-  async createUserAdmin(
-    @UserId() userId: string,
-    @Body() data: CreateUserDto,
-  ): Promise<User> {
+  async createUserAdmin(@UserId() userId: string, @Body() data: CreateUserDto) {
     return await this.usersService.createAdmin(userId, data)
   }
 
   @Roles(UserType.Common, UserType.Root, UserType.Admin)
-  @Put('/update-user/:id')
+  @Put('/update-user')
   async update(
-    @Param('id') id: string,
+    @UserId() userId: string,
     @Body() data: UpdateUserDto,
-  ): Promise<User> {
-    return await this.usersService.update(id, data)
+  ): Promise<ReturnUserUpdatedDto> {
+    return new ReturnUserUpdatedDto(
+      await this.usersService.update(userId, data),
+    )
   }
 
   @Roles(UserType.Common, UserType.Root, UserType.Admin)
@@ -93,12 +97,14 @@ export class UsersController {
   async updatePassword(
     @UserId() userId: string,
     @Body() data: UpdatePasswordDto,
-  ) {
-    return await this.usersService.updatePassword(userId, data)
+  ): Promise<ReturnUserUpdatedDto> {
+    return new ReturnUserUpdatedDto(
+      await this.usersService.updatePassword(userId, data),
+    )
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.delete(id)
+  @Delete('/delete-user')
+  async inactive(@UserId() userId: string) {
+    return new ReturnUserDeletedDto(await this.usersService.delete(userId))
   }
 }

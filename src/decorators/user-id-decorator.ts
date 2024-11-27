@@ -3,7 +3,12 @@ import { authorizantionToLoginPayload } from '../utils/converter/base-64-convert
 
 export const UserId = createParamDecorator((_, ctx: ExecutionContext) => {
   const { authorization } = ctx.switchToHttp().getRequest().headers
-  const LoginPayload = authorizantionToLoginPayload(authorization)
 
-  return LoginPayload?.id
+  if (!authorization) {
+    return undefined
+  }
+
+  const loginPayload = authorizantionToLoginPayload(authorization)
+
+  return loginPayload?.id
 })

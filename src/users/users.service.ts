@@ -1,12 +1,12 @@
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
-import { encryptPassword, validatePassword } from 'src/utils/encrypt/password'
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-
 import { User } from './entities/user.entity'
 import { Repository } from 'typeorm'
+import { formatInTimeZone } from 'date-fns-tz'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UpdatePasswordDto } from './dto/update-password.dto'
+import { encryptPassword, validatePassword } from 'src/utils/encrypt/password'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import {
   paginate,
@@ -65,7 +65,7 @@ export class UsersService {
     email && user.andWhere('u.email ILIKE :email', { email: `%${email}%` })
     typeUser && user.andWhere('u.typeUser = :typeUser', { typeUser })
     status !== undefined && user.andWhere('u.status = :status', { status })
-    order && user.orderBy('u.id', `${order}`)
+    order && user.orderBy('u.name', `${order}`)
     user.withDeleted()
 
     return paginate<User>(user, options)
@@ -118,8 +118,12 @@ export class UsersService {
 
     const UpdatedUserData = {
       ...data,
-      updatedAt: new Date(),
-      updatedUser: 0,
+      updatedAt: formatInTimeZone(
+        new Date(),
+        'America/Sao_Paulo',
+        'yyyy-MM-dd HH:mm:ssXXX',
+      ),
+      updatedUser: id,
     }
 
     return await this.userRepository.save({
@@ -157,7 +161,7 @@ export class UsersService {
 
     const data = {
       deletedAt: new Date(),
-      deletedUser: 0,
+      deletedUser: id,
       status: false,
     }
 

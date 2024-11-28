@@ -1,6 +1,5 @@
 import { User } from './entities/user.entity'
 import { Repository } from 'typeorm'
-import { formatInTimeZone } from 'date-fns-tz'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -118,11 +117,7 @@ export class UsersService {
 
     const UpdatedUserData = {
       ...data,
-      updatedAt: formatInTimeZone(
-        new Date(),
-        'America/Sao_Paulo',
-        'yyyy-MM-dd HH:mm:ssXXX',
-      ),
+      updatedAt: new Date(),
       updatedUser: id,
     }
 

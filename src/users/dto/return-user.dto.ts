@@ -18,38 +18,20 @@ export class ReturnUserDto {
   }
 }
 
-export class ReturnUserUpdatedDto {
-  id: string
-  name: string
-  email: string
-  typeUser: number
-  status: boolean
+export class ReturnUserUpdatedDto extends ReturnUserDto {
   updatedAt: Date
 
   constructor(userEntity: User) {
-    this.id = userEntity.id
-    this.name = userEntity.name
-    this.email = userEntity.email
-    this.typeUser = userEntity.typeUser
-    this.status = userEntity.status
+    super(userEntity)
     this.updatedAt = userEntity.updatedAt
   }
 }
 
-export class ReturnUserDeletedDto {
-  id: string
-  name: string
-  email: string
-  typeUser: number
-  status: boolean
+export class ReturnUserDeletedDto extends ReturnUserDto {
   deletedAt: Date
 
   constructor(userEntity: User) {
-    this.id = userEntity.id
-    this.name = userEntity.name
-    this.email = userEntity.email
-    this.typeUser = userEntity.typeUser
-    this.status = userEntity.status
+    super(userEntity)
     this.deletedAt = userEntity.deletedAt
   }
 }

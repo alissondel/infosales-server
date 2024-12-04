@@ -54,7 +54,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Listar Usuário Por Parametro Id' })
   @ApiResponse({
     status: 200,
-    description: 'Usários listado com sucessos.',
+    description: 'Usuários listado com sucessos.',
   })
   @ApiResponse({ status: 403, description: 'Sem acesso!' })
   @Roles(UserType.Admin)
@@ -67,7 +67,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Listar Usuários' })
   @ApiResponse({
     status: 200,
-    description: 'Usários listados com sucessos.',
+    description: 'Usuários listados com sucessos.',
   })
   @ApiResponse({ status: 403, description: 'Sem acesso!' })
   @Roles(UserType.Admin)

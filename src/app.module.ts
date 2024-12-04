@@ -5,6 +5,8 @@ import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { ConfigModule } from '@nestjs/config'
 import { APP_GUARD, APP_PIPE } from '@nestjs/core'
+import { KambanModule } from './kamban/kamban.module'
+import { BusinessModule } from './business/business.module'
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core'
     UsersModule,
     AuthModule,
     JwtModule,
+    BusinessModule,
+    KambanModule,
   ],
   controllers: [],
   providers: [

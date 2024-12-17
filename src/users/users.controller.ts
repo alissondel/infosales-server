@@ -21,10 +21,16 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Param,
   Delete,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  NotFoundException,
 } from '@nestjs/common'
+import { Response } from 'express'
 
 import {
   ApiBody,
@@ -32,7 +38,10 @@ import {
   ApiBearerAuth,
   ApiResponse,
 } from '@nestjs/swagger'
-
+import { FileInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
+import { HelperFile } from 'src/shared/helper'
+import { existsSync } from 'fs'
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -94,6 +103,22 @@ export class UsersController {
     )
   }
 
+  @Get('profile-image/:imagename')
+  async findProfileImage(
+    @Param('imagename') imagename: string,
+    @Res() res: Response,
+  ) {
+    const imagePath = `./upload/avatar/${imagename}`
+
+    // Verifica se o arquivo existe
+    if (!existsSync(imagePath)) {
+      throw new NotFoundException('Imagem não encontrada.')
+    }
+
+    // Envia o arquivo
+    return res.sendFile(imagename, { root: './upload/avatar' })
+  }
+
   @ApiBody({ type: CreateUserDto })
   @ApiOperation({ summary: 'Criar Usuário Comum' })
   @ApiResponse({
@@ -130,6 +155,23 @@ export class UsersController {
     if (!isEmailUnique) throw new NotFoundError('Este e-mail já está em uso.')
 
     return await this.usersService.createAdmin(userId, data)
+  }
+
+  @Patch('avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './upload/avatar',
+        filename: HelperFile.customFilename,
+      }),
+      limits: { fileSize: 1024 * 1024 * 5 },
+    }),
+  )
+  updateAvatar(
+    @UserId() userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.usersService.updateAvatar(userId, file.path, file.filename)
   }
 
   @ApiBody({ type: UpdateUserDto })
@@ -181,7 +223,24 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Dado inválido!' })
   @ApiResponse({ status: 403, description: 'Sem acesso!' })
   @Delete('/delete-user')
-  async inactive(@UserId() userId: string) {
-    return new ReturnUserDeletedDto(await this.usersService.delete(userId))
+  async inactiveUserToken(@UserId() userId: string) {
+    return new ReturnUserDeletedDto(
+      await this.usersService.inactiveUserToken(userId),
+    )
+  }
+
+  @ApiBearerAuth('KEY_AUTH')
+  @ApiOperation({ summary: 'Inativar Usuário' })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuário foi inativado com sucesso.',
+  })
+  @ApiResponse({ status: 400, description: 'Dado inválido!' })
+  @ApiResponse({ status: 403, description: 'Sem acesso!' })
+  @Delete(':id')
+  async inactiveUserId(@Param('id') id: string, @UserId() userId: string) {
+    return new ReturnUserDeletedDto(
+      await this.usersService.inactiveUserId(id, userId),
+    )
   }
 }

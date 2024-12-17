@@ -1,32 +1,26 @@
+import { State } from 'src/states/entities/state.entity'
 import { Address } from 'src/addresses/entities/address.entity'
-import { CompaniesToUsers } from 'src/companies_users/entities/companies_users.entity'
 
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
   DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
+import { Company } from 'src/companies/entities/company.entity'
 
-@Entity({ name: 'users' })
-export class User {
+@Entity({ name: 'cities ' })
+export class City {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ nullable: false, type: 'varchar' })
+  @Column({ name: 'name', nullable: false })
   name: string
-
-  @Column({ nullable: false, type: 'varchar' })
-  email: string
-
-  @Column({ nullable: false, type: 'varchar' })
-  password: string
-
-  @Column({ name: 'type_user', nullable: false, type: 'integer' })
-  typeUser: number
 
   @Column({ default: true, type: 'boolean' })
   status: boolean
@@ -49,19 +43,16 @@ export class User {
   @Column({ name: 'deleted_user', type: 'varchar', nullable: true })
   deletedUser!: string
 
-  @Column({ nullable: true })
-  avatar: string
+  @Column({ name: 'state_id', nullable: false })
+  stateId: string
 
-  @Column({ nullable: true })
-  avatar_url: string
+  @ManyToOne(() => State, (state) => state.cities)
+  @JoinColumn({ name: 'state_id', referencedColumnName: 'id' })
+  state?: State
 
-  @OneToMany(() => Address, (address) => address.user)
+  @OneToMany(() => Address, (addressEntity) => addressEntity.city)
   addresses?: Address[]
 
-  @OneToMany(
-    () => CompaniesToUsers,
-    (companiesToUsersEntity) => companiesToUsersEntity.user,
-    { eager: true },
-  )
-  companiesToUsers: CompaniesToUsers[]
+  @OneToMany(() => Company, (companyEntity) => companyEntity.city)
+  companies?: Company[]
 }

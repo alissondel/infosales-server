@@ -1,4 +1,4 @@
-import { Address } from 'src/addresses/entities/address.entity'
+import { City } from 'src/cities/entities/city.entity'
 import { CompaniesToUsers } from 'src/companies_users/entities/companies_users.entity'
 
 import {
@@ -9,24 +9,38 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm'
 
-@Entity({ name: 'users' })
-export class User {
+@Entity({ name: 'companies' })
+export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ nullable: false, type: 'varchar' })
-  name: string
+  @Column({ name: 'company_name', nullable: false, type: 'varchar' })
+  companyName: string
+
+  @Column({ name: 'trade_name', nullable: false, type: 'varchar' })
+  tradeName: string
 
   @Column({ nullable: false, type: 'varchar' })
+  cnpj: string
+
+  @Column({ name: 'state_registration', nullable: true, type: 'varchar' })
+  stateRegistration: string
+
+  @Column({ name: 'municipal_registration', nullable: true, type: 'varchar' })
+  municipalRegistration: string
+
+  @Column({ nullable: true, type: 'varchar' })
+  responsibly: string
+
+  @Column({ nullable: true, type: 'varchar' })
   email: string
 
-  @Column({ nullable: false, type: 'varchar' })
-  password: string
-
-  @Column({ name: 'type_user', nullable: false, type: 'integer' })
-  typeUser: number
+  @Column({ name: 'number_phone', nullable: true, type: 'varchar' })
+  numberPhone: string
 
   @Column({ default: true, type: 'boolean' })
   status: boolean
@@ -49,19 +63,16 @@ export class User {
   @Column({ name: 'deleted_user', type: 'varchar', nullable: true })
   deletedUser!: string
 
-  @Column({ nullable: true })
-  avatar: string
+  @Column({ name: 'city_id', nullable: false })
+  cityId: string
 
-  @Column({ nullable: true })
-  avatar_url: string
-
-  @OneToMany(() => Address, (address) => address.user)
-  addresses?: Address[]
+  @ManyToOne(() => City, (cityEntity) => cityEntity.companies)
+  @JoinColumn({ name: 'city_id', referencedColumnName: 'id' })
+  city?: City
 
   @OneToMany(
     () => CompaniesToUsers,
-    (companiesToUsersEntity) => companiesToUsersEntity.user,
-    { eager: true },
+    (companiesToUsersEntity) => companiesToUsersEntity.company,
   )
   companiesToUsers: CompaniesToUsers[]
 }

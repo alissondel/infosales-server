@@ -13,6 +13,8 @@ const port = normalizePort(process.env.SERVER_PORT || '3001')
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
+  app.enableCors()
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

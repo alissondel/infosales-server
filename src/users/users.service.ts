@@ -12,6 +12,7 @@ import {
   Pagination,
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate'
+import { HelperFile } from 'src/shared/helper'
 
 @Injectable()
 export class UsersService {
@@ -21,7 +22,9 @@ export class UsersService {
   ) {}
 
   async findOne(id: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id })
+    const user = await this.userRepository.findOne({
+      where: { id },
+    })
 
     if (!user) {
       throw new NotFoundError('Usuário não existente')
@@ -31,7 +34,13 @@ export class UsersService {
   }
 
   async findEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { email } })
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: {
+        addresses: true,
+        companiesToUsers: true,
+      },
+    })
 
     if (!user) {
       throw new NotFoundError(`Email: ${email} não existente!`)
@@ -51,13 +60,9 @@ export class UsersService {
   ): Promise<Pagination<User>> {
     const queryBuilder = this.userRepository.createQueryBuilder('u')
 
-    const user = await queryBuilder.select([
-      'u.id',
-      'u.name',
-      'u.email',
-      'u.typeUser',
-      'u.status',
-    ])
+    const user = await queryBuilder
+      .select(['u.id', 'u.name', 'u.email', 'u.typeUser', 'u.status'])
+      .where('u.status = :status', { status: true })
 
     id && user.andWhere('u.id = :id', { id })
     name && user.andWhere('u.name ILIKE :name', { name: `%${name}%` })
@@ -112,6 +117,26 @@ export class UsersService {
     return this.userRepository.save(user)
   }
 
+  async updateAvatar(userId: string, file: string, fileName: string) {
+    const user = await this.findOne(userId)
+
+    if (user.avatar === null || user.avatar === '') {
+      await this.userRepository.update(userId, {
+        avatar: file,
+        avatar_url:
+          process.env.PATH_IMAGE_HOST + '/users/profile-image/' + fileName,
+      })
+    } else {
+      await HelperFile.removeFile(user.avatar)
+
+      await this.userRepository.update(userId, {
+        avatar: file,
+        avatar_url:
+          process.env.PATH_IMAGE_HOST + '/users/profile-image/' + fileName,
+      })
+    }
+  }
+
   async update(id: string, data: UpdateUserDto): Promise<User> {
     const userOld = await this.findOne(id)
 
@@ -151,12 +176,27 @@ export class UsersService {
     })
   }
 
-  async delete(id: string): Promise<User> {
+  async inactiveUserToken(userId: string): Promise<User> {
+    const user = await this.findOne(userId)
+
+    const data = {
+      deletedAt: null,
+      deletedUser: userId,
+      status: false,
+    }
+
+    return await this.userRepository.save({
+      ...user,
+      ...data,
+    })
+  }
+
+  async inactiveUserId(id: string, userId: string): Promise<User> {
     const user = await this.findOne(id)
 
     const data = {
-      deletedAt: new Date(),
-      deletedUser: id,
+      deletedAt: null,
+      deletedUser: userId,
       status: false,
     }
 

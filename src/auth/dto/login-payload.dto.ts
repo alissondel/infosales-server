@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity'
+import { User } from 'src/users/entities/user.entity'
 
 export class LoginPayload {
   id: string
@@ -7,6 +7,8 @@ export class LoginPayload {
   typeUser: number
   status: boolean
   createdAt: Date
+  avatar_url: string
+  companyIds: string[]
 
   constructor(userEntity: User) {
     this.id = userEntity.id
@@ -15,5 +17,9 @@ export class LoginPayload {
     this.typeUser = userEntity.typeUser
     this.status = userEntity.status
     this.createdAt = userEntity.createdAt
+    this.avatar_url = userEntity.avatar_url
+    this.companyIds = userEntity.companiesToUsers
+      ? userEntity.companiesToUsers.map((key) => key.companyId)
+      : []
   }
 }

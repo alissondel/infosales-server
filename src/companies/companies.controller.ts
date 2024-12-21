@@ -1,12 +1,13 @@
-import { CompaniesService } from './companies.service'
-import { CreateCompanyDto } from './dto/create-company.dto'
-import { UpdateCompanyDto } from './dto/update-company.dto'
 import { UserId } from 'src/decorators/user-id-decorator'
 import { Roles } from 'src/decorators/roles.decorator'
 import { UserType } from 'src/users/enum/user-type.enum'
 import { Company } from './entities/company.entity'
 import { Pagination } from 'nestjs-typeorm-paginate'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { CompaniesService } from './companies.service'
+import { CreateCompanyDto } from './dto/create-company.dto'
+import { UpdateCompanyDto } from './dto/update-company.dto'
+import { FilterCompanyDto } from './dto/filter-company.dto'
 
 import {
   Get,
@@ -41,35 +42,10 @@ export class CompaniesController {
     @Query('page') page = 1,
     @Query('limit') limit = 100,
     @Query('order') order: 'ASC' | 'DESC',
-    @Query('id') id: string,
-    @Query('companyName') companyName: string,
-    @Query('tradeName') tradeName: string,
-    @Query('cnpj') cnpj: string,
-    @Query('stateRegistration') stateRegistration: string,
-    @Query('municipalRegistration') municipalRegistration: string,
-    @Query('responsibly') responsibly: string,
-    @Query('email') email: string,
-    @Query('numberPhone') numberPhone: string,
-    @Query('status') status: boolean,
-    @Query('cityName') cityName: string,
+    @Query('filter') filter: FilterCompanyDto,
   ): Promise<Pagination<Company>> {
     limit = limit > 100 ? 100 : limit
-
-    return await this.companiesService.findAll(
-      { page, limit },
-      order,
-      id,
-      companyName,
-      tradeName,
-      cnpj,
-      stateRegistration,
-      municipalRegistration,
-      responsibly,
-      email,
-      numberPhone,
-      status,
-      cityName,
-    )
+    return await this.companiesService.findAll({ page, limit }, order, filter)
   }
 
   @Roles(UserType.Admin)

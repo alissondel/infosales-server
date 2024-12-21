@@ -1,15 +1,17 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Address } from './entities/address.entity'
+import { Repository } from 'typeorm'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { ConflictError } from 'src/commom/errors/types/ConflictError'
 import { CreateAddressDto } from './dto/create-address.dto'
 import { UpdateAddressDto } from './dto/update-address.dto'
-import { Repository } from 'typeorm'
-import { Address } from './entities/address.entity'
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { FilterAddressDto } from './dto/filter-address.dto'
+import { Inject, Injectable } from '@nestjs/common'
+
 import {
   paginate,
   IPaginationOptions,
   Pagination,
 } from 'nestjs-typeorm-paginate'
-import { ConflictError } from 'src/commom/errors/types/ConflictError'
 
 @Injectable()
 export class AddressesService {
@@ -35,13 +37,9 @@ export class AddressesService {
   }
 
   async findAll(
-    options?: IPaginationOptions,
+    options: IPaginationOptions,
     order: 'ASC' | 'DESC' = 'ASC',
-    id?: string,
-    street?: string,
-    status?: boolean,
-    cityName?: string,
-    userName?: string,
+    filter: FilterAddressDto,
   ): Promise<Pagination<Address>> {
     const queryBuilder = this.addressRepository.createQueryBuilder('a')
 
@@ -76,18 +74,21 @@ export class AddressesService {
         { withDeleted: true }, // Inclui registros "soft-deleted" em user
       )
 
-    id && address.andWhere('a.id = :id', { id })
-    street &&
-      address.andWhere('a.street ILIKE :street', { street: `%${street}%` })
-    status !== undefined && address.andWhere('a.status = :status', { status })
-    order && address.orderBy('a.street', `${order}`)
-    cityName &&
-      address.andWhere('city.name ILIKE :cityName', {
-        cityName: `%${cityName}%`,
+    filter.id && address.andWhere('a.id = :id', { id: filter.id })
+    filter.street &&
+      address.andWhere('a.street ILIKE :street', {
+        street: `%${filter.street}%`,
       })
-    userName &&
+    filter.status !== undefined &&
+      address.andWhere('a.status = :status', { status: filter.status })
+    order && address.orderBy('a.street', `${order}`)
+    filter.cityName &&
+      address.andWhere('city.name ILIKE :cityName', {
+        cityName: `%${filter.cityName}%`,
+      })
+    filter.userName &&
       address.andWhere('user.name ILIKE :userName', {
-        userName: `%${userName}%`,
+        userName: `%${filter.userName}%`,
       })
 
     return paginate<Address>(address, options)

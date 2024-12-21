@@ -11,4 +11,9 @@ export class AuthController {
   async login(@Body() data: LoginDto): Promise<ReturnLoginDTO> {
     return this.authService.login(data)
   }
+
+  @Post('/refresh')
+  async refresh(@Body('token') token: string) {
+    return this.authService.refresh(token)
+  }
 }

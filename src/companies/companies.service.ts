@@ -9,6 +9,7 @@ import {
   Pagination,
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate'
+import type { FilterCompanyDto } from './dto/filter-company.dto'
 
 @Injectable()
 export class CompaniesService {
@@ -35,17 +36,7 @@ export class CompaniesService {
   async findAll(
     options: IPaginationOptions,
     order: 'ASC' | 'DESC' = 'ASC',
-    id: string,
-    companyName: string,
-    tradeName: string,
-    cnpj: string,
-    stateRegistration: string,
-    municipalRegistration: string,
-    responsibly: string,
-    email: string,
-    numberPhone: string,
-    status: boolean,
-    cityName?: string,
+    filter: FilterCompanyDto,
   ): Promise<Pagination<Company>> {
     const queryBuilder = this.companyRepository.createQueryBuilder('co')
 
@@ -74,41 +65,49 @@ export class CompaniesService {
         { withDeleted: true }, // Inclui registros "soft-deleted" em city
       )
 
-    id && company.andWhere('co.id = :id', { id })
-    companyName &&
+    filter.id &&
+      company.andWhere('co.id = :id', {
+        id: filter.id,
+      })
+    filter.companyName &&
       company.andWhere('co.companyName ILIKE :companyName', {
-        companyName: `%${companyName}%`,
+        companyName: `%${filter.companyName}%`,
       })
-    tradeName &&
+    filter.tradeName &&
       company.andWhere('co.tradeName ILIKE :tradeName', {
-        tradeName: `%${tradeName}%`,
+        tradeName: `%${filter.tradeName}%`,
       })
-    cnpj && company.andWhere('co.cnpj ILIKE :cnpj', { cnpj: `%${cnpj}%` })
-    stateRegistration &&
+    filter.cnpj &&
+      company.andWhere('co.cnpj ILIKE :cnpj', { cnpj: `%${filter.cnpj}%` })
+    filter.stateRegistration &&
       company.andWhere('co.stateRegistration ILIKE :stateRegistration', {
-        stateRegistration: `%${stateRegistration}%`,
+        stateRegistration: `%${filter.stateRegistration}%`,
       })
-    municipalRegistration &&
+    filter.municipalRegistration &&
       company.andWhere(
         'co.municipalRegistration ILIKE :municipalRegistration',
         {
-          municipalRegistration: `%${municipalRegistration}%`,
+          municipalRegistration: `%${filter.municipalRegistration}%`,
         },
       )
-    responsibly &&
+    filter.responsibly &&
       company.andWhere('co.responsibly ILIKE :responsibly', {
-        responsibly: `%${responsibly}%`,
+        responsibly: `%${filter.responsibly}%`,
       })
-    email && company.andWhere('co.email ILIKE :email', { email: `%${email}%` })
-    numberPhone &&
+    filter.email &&
+      company.andWhere('co.email ILIKE :email', { email: `%${filter.email}%` })
+    filter.numberPhone &&
       company.andWhere('co.numberPhone ILIKE :numberPhone', {
-        numberPhone: `%${numberPhone}%`,
+        numberPhone: `%${filter.numberPhone}%`,
       })
-    status !== undefined && company.andWhere('co.status = :status', { status })
+    filter.status !== undefined &&
+      company.andWhere('co.status = :status', {
+        status: filter.status,
+      })
     order && company.orderBy('co.tradeName', `${order}`)
-    cityName &&
+    filter.cityName &&
       company.andWhere('city.name ILIKE :cityName', {
-        cityName: `%${cityName}%`,
+        cityName: `%${filter.cityName}%`,
       })
 
     return paginate<Company>(company, options)

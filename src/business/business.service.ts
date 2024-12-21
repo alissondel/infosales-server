@@ -1,9 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { CreateBusinessDto } from './dto/create-business.dto'
-import { UpdateBusinessDto } from './dto/update-business.dto'
 import { Repository } from 'typeorm'
 import { Business } from './entities/business.entity'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { CreateBusinessDto } from './dto/create-business.dto'
+import { UpdateBusinessDto } from './dto/update-business.dto'
+import { FilterBusinessDto } from './dto/filter-business.dto'
+import { Inject, Injectable } from '@nestjs/common'
+
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate'
 
 @Injectable()
 export class BusinessService {
@@ -22,18 +29,39 @@ export class BusinessService {
     return business
   }
 
-  async findAll(): Promise<Business[]> {
-    const businesses = await this.businessRepository.find({
-      relations: {
-        kamban: true,
-      },
-    })
+  async findAll(
+    options: IPaginationOptions,
+    order: 'ASC' | 'DESC' = 'ASC',
+    filter: FilterBusinessDto,
+  ): Promise<Pagination<Business>> {
+    const queryBuilder = this.businessRepository.createQueryBuilder('b')
 
-    if (!businesses || businesses.length === 0) {
-      throw new NotFoundError('Businesses não existente')
-    }
+    const businesses = await queryBuilder
+      .select([
+        'b.id',
+        'b.title',
+        'b.status',
+        'b.status',
+        'kamban.id',
+        'kamban.title',
+        'kamban.observation',
+      ])
+      .where('b.status = :status', { status: true })
+      .leftJoin('b.kamban', 'kamban', undefined, { withDeleted: true })
 
-    return businesses
+    filter.id && businesses.andWhere('b.id = :id', { id: filter.id })
+    filter.title &&
+      businesses.andWhere('b.name ILIKE :name', { title: `%${filter.title}%` })
+    filter.status !== undefined &&
+      businesses.andWhere('b.status = :status', { status: filter.status })
+    order && businesses.orderBy('b.title', `${order}`)
+    filter.titleKamban &&
+      businesses.andWhere('kamban.title ILIKE :titleKamban', {
+        titleKamban: `%${filter.titleKamban}%`,
+      })
+    businesses.withDeleted()
+
+    return paginate<Business>(businesses, options)
   }
 
   async create(userId: string, data: CreateBusinessDto): Promise<Business> {

@@ -6,6 +6,12 @@ import { CompaniesToUsers } from './entities/companies_users.entity'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { UsersService } from 'src/users/users.service'
 import { CompaniesService } from 'src/companies/companies.service'
+import type { FilterCompaniesToUsersDto } from './dto/filter-companies_users.dto'
+import {
+  paginate,
+  type IPaginationOptions,
+  type Pagination,
+} from 'nestjs-typeorm-paginate'
 
 @Injectable()
 export class CompaniesUsersService {
@@ -36,8 +42,45 @@ export class CompaniesUsersService {
     return companyToUser
   }
 
-  findAll() {
-    return `This action returns all companiesUsers`
+  async findAll(
+    options: IPaginationOptions,
+    order: 'ASC' | 'DESC' = 'ASC',
+    filter: FilterCompaniesToUsersDto,
+  ): Promise<Pagination<CompaniesToUsers>> {
+    const queryBuilder = this.companyToUserRepository.createQueryBuilder('cu')
+
+    const companiesToUsers = await queryBuilder
+      .select([
+        'cu.id',
+        'cu.status',
+        'company.id',
+        'company.tradeName',
+        'company.status',
+        'user.id',
+        'user.name',
+        'user.status',
+      ])
+      .where('cu.status = :status', { status: true })
+      .leftJoin('cu.company', 'company', undefined, { withDeleted: true })
+      .leftJoin('cu.user', 'user', undefined, { withDeleted: true })
+
+    filter.id && companiesToUsers.andWhere('cu.id = :id', { id: filter.id })
+    filter.status !== undefined &&
+      companiesToUsers.andWhere('cu.status = :status', {
+        status: filter.status,
+      })
+    order && companiesToUsers.orderBy('cu.id', `${order}`)
+    filter.companyName &&
+      companiesToUsers.andWhere('company.tradeName ILIKE :companyName', {
+        companyName: `%${filter.companyName}%`,
+      })
+    filter.userName &&
+      companiesToUsers.andWhere('user.name ILIKE :userName', {
+        userName: `%${filter.userName}%`,
+      })
+    companiesToUsers.withDeleted()
+
+    return paginate<CompaniesToUsers>(companiesToUsers, options)
   }
 
   async create(

@@ -1,3 +1,20 @@
+import { Roles } from 'src/decorators/roles.decorator'
+import { State } from './entities/state.entity'
+import { UserId } from 'src/decorators/user-id-decorator'
+import { UserType } from 'src/users/enum/user-type.enum'
+import { Pagination } from 'nestjs-typeorm-paginate'
+import { StatesService } from './states.service'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { CreateStateDto } from './dto/create-state.dto'
+import { UpdateStateDto } from './dto/update-state.dto'
+import { FilterStateDto } from './dto/filter-state.dto'
+
+import {
+  ReturnStateDto,
+  ReturnStateUpdatedDto,
+  ReturnStateDeletedDto,
+} from './dto/return-state.dto'
+
 import {
   Controller,
   Get,
@@ -8,20 +25,6 @@ import {
   Delete,
   Query,
 } from '@nestjs/common'
-import { StatesService } from './states.service'
-import { CreateStateDto } from './dto/create-state.dto'
-import { UpdateStateDto } from './dto/update-state.dto'
-import { UserId } from 'src/decorators/user-id-decorator'
-import { Roles } from 'src/decorators/roles.decorator'
-import { UserType } from 'src/users/enum/user-type.enum'
-import { Pagination } from 'nestjs-typeorm-paginate'
-import { State } from './entities/state.entity'
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
-import {
-  ReturnStateDto,
-  ReturnStateUpdatedDto,
-  ReturnStateDeletedDto,
-} from './dto/return-state.dto'
 
 @Controller('states')
 export class StatesController {
@@ -39,21 +42,11 @@ export class StatesController {
     @Query('page') page = 1,
     @Query('limit') limit = 100,
     @Query('order') order: 'ASC' | 'DESC',
-    @Query('id') id: string,
-    @Query('name') name: string,
-    @Query('uf') uf: string,
-    @Query('status') status: boolean,
+    @Query('filter') filter: FilterStateDto,
   ): Promise<Pagination<State>> {
     limit = limit > 100 ? 100 : limit
 
-    return await this.statesService.findAll(
-      { page, limit },
-      order,
-      id,
-      name,
-      uf,
-      status,
-    )
+    return await this.statesService.findAll({ page, limit }, order, filter)
   }
 
   @Roles(UserType.Admin)

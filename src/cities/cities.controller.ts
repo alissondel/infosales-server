@@ -6,6 +6,7 @@ import { Pagination } from 'nestjs-typeorm-paginate'
 import { CitiesService } from './cities.service'
 import { CreateCityDto } from './dto/create-city.dto'
 import { UpdateCityDto } from './dto/update-city.dto'
+import { FilterCityDto } from './dto/filter-city.dto'
 
 import {
   ReturnCityDto,
@@ -40,21 +41,11 @@ export class CitiesController {
     @Query('page') page = 1,
     @Query('limit') limit = 100,
     @Query('order') order: 'ASC' | 'DESC',
-    @Query('id') id: string,
-    @Query('name') name: string,
-    @Query('status') status: boolean,
-    @Query('stateName') stateName: string,
+    @Query('filter') filter: FilterCityDto,
   ): Promise<Pagination<City>> {
     limit = limit > 100 ? 100 : limit
 
-    return await this.citiesService.findAll(
-      { page, limit },
-      order,
-      id,
-      name,
-      status,
-      stateName,
-    )
+    return await this.citiesService.findAll({ page, limit }, order, filter)
   }
 
   @Roles(UserType.Admin)

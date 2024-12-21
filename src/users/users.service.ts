@@ -1,8 +1,10 @@
 import { User } from './entities/user.entity'
 import { Repository } from 'typeorm'
+import { HelperFile } from 'src/shared/helper'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
+import { FilterUserDto } from './dto/filter-user.dto'
 import { UpdatePasswordDto } from './dto/update-password.dto'
 import { encryptPassword, validatePassword } from 'src/utils/encrypt/password'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -12,7 +14,6 @@ import {
   Pagination,
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate'
-import { HelperFile } from 'src/shared/helper'
 
 @Injectable()
 export class UsersService {
@@ -52,23 +53,32 @@ export class UsersService {
   async findAll(
     options: IPaginationOptions,
     order: 'ASC' | 'DESC' = 'ASC',
-    id: string,
-    name: string,
-    email: string,
-    typeUser: number,
-    status: boolean,
+    filter: FilterUserDto,
   ): Promise<Pagination<User>> {
     const queryBuilder = this.userRepository.createQueryBuilder('u')
 
     const user = await queryBuilder
-      .select(['u.id', 'u.name', 'u.email', 'u.typeUser', 'u.status'])
+      .select([
+        'u.id',
+        'u.name',
+        'u.email',
+        'u.typeUser',
+        'u.status',
+        'u.createdAt',
+      ])
       .where('u.status = :status', { status: true })
 
-    id && user.andWhere('u.id = :id', { id })
-    name && user.andWhere('u.name ILIKE :name', { name: `%${name}%` })
-    email && user.andWhere('u.email ILIKE :email', { email: `%${email}%` })
-    typeUser && user.andWhere('u.typeUser = :typeUser', { typeUser })
-    status !== undefined && user.andWhere('u.status = :status', { status })
+    filter.id && user.andWhere('u.id = :id', { id: filter.id })
+    filter.name &&
+      user.andWhere('u.name ILIKE :name', { name: `%${filter.name}%` })
+    filter.email &&
+      user.andWhere('u.email ILIKE :email', { email: `%${filter.email}%` })
+    filter.typeUser &&
+      user.andWhere('u.typeUser = :typeUser', { typeUser: filter.typeUser })
+    filter.status !== undefined &&
+      user.andWhere('u.status = :status', { status: filter.status })
+    filter.createdAt !== undefined &&
+      user.andWhere('u.createdAt = :createdAt', { createdAt: filter.createdAt })
     order && user.orderBy('u.name', `${order}`)
     user.withDeleted()
 

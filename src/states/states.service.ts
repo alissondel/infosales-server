@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { State } from './entities/state.entity'
+import { Repository } from 'typeorm'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { CreateStateDto } from './dto/create-state.dto'
 import { UpdateStateDto } from './dto/update-state.dto'
-import { Repository } from 'typeorm'
-import { State } from './entities/state.entity'
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { FilterStateDto } from './dto/filter-state.dto'
+import { Inject, Injectable } from '@nestjs/common'
 
 import {
   paginate,
@@ -31,10 +32,7 @@ export class StatesService {
   async findAll(
     options: IPaginationOptions,
     order: 'ASC' | 'DESC' = 'ASC',
-    id: string,
-    name: string,
-    uf: string,
-    status: boolean,
+    filter: FilterStateDto,
   ): Promise<Pagination<State>> {
     const queryBuilder = this.stateRepository.createQueryBuilder('s')
 
@@ -42,10 +40,12 @@ export class StatesService {
       .select(['s.id', 's.name', 's.uf', 's.status'])
       .where('s.status = :status', { status: true })
 
-    id && state.andWhere('s.id = :id', { id })
-    name && state.andWhere('s.name ILIKE :name', { name: `%${name}%` })
-    uf && state.andWhere('s.uf ILIKE :uf', { uf: `%${uf}%` })
-    status !== undefined && state.andWhere('s.status = :status', { status })
+    filter.id && state.andWhere('s.id = :id', { id: filter.id })
+    filter.name &&
+      state.andWhere('s.name ILIKE :name', { name: `%${filter.name}%` })
+    filter.uf && state.andWhere('s.uf ILIKE :uf', { uf: `%${filter.uf}%` })
+    filter.status !== undefined &&
+      state.andWhere('s.status = :status', { status: filter.status })
     order && state.orderBy('s.name', `${order}`)
     state.withDeleted()
 

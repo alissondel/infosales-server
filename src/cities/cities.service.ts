@@ -1,13 +1,15 @@
+import { City } from './entities/city.entity'
+import { Repository } from 'typeorm'
 import { Inject, Injectable } from '@nestjs/common'
 import { CreateCityDto } from './dto/create-city.dto'
 import { UpdateCityDto } from './dto/update-city.dto'
-import { Repository } from 'typeorm'
-import { City } from './entities/city.entity'
+import { FilterCityDto } from './dto/filter-city.dto'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+
 import {
   paginate,
-  type IPaginationOptions,
-  type Pagination,
+  IPaginationOptions,
+  Pagination,
 } from 'nestjs-typeorm-paginate'
 
 @Injectable()
@@ -33,12 +35,9 @@ export class CitiesService {
   }
 
   async findAll(
-    options?: IPaginationOptions,
+    options: IPaginationOptions,
     order: 'ASC' | 'DESC' = 'ASC',
-    id?: string,
-    name?: string,
-    status?: boolean,
-    stateName?: string,
+    filter: FilterCityDto,
   ): Promise<Pagination<City>> {
     const queryBuilder = this.cityRepository.createQueryBuilder('c')
 
@@ -55,13 +54,15 @@ export class CitiesService {
       .where('c.status = :status', { status: true })
       .leftJoin('c.state', 'state', undefined, { withDeleted: true })
 
-    id && city.andWhere('c.id = :id', { id })
-    name && city.andWhere('c.name ILIKE :name', { name: `%${name}%` })
-    status !== undefined && city.andWhere('c.status = :status', { status })
+    filter.id && city.andWhere('c.id = :id', { id: filter.id })
+    filter.name &&
+      city.andWhere('c.name ILIKE :name', { name: `%${filter.name}%` })
+    filter.status !== undefined &&
+      city.andWhere('c.status = :status', { status: filter.status })
     order && city.orderBy('c.name', `${order}`)
-    stateName &&
+    filter.stateName &&
       city.andWhere('state.name ILIKE :stateName', {
-        stateName: `%${stateName}%`,
+        stateName: `%${filter.stateName}%`,
       })
     city.withDeleted()
 

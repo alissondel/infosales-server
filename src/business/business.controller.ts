@@ -1,10 +1,22 @@
 import { Roles } from 'src/decorators/roles.decorator'
 import { UserId } from 'src/decorators/user-id-decorator'
 import { UserType } from 'src/users/enum/user-type.enum'
+import { Business } from './entities/business.entity'
+import { Pagination } from 'nestjs-typeorm-paginate'
 import { BusinessService } from './business.service'
 import { CreateBusinessDto } from './dto/create-business.dto'
 import { UpdateBusinessDto } from './dto/update-business.dto'
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common'
+import { FilterBusinessDto } from './dto/filter-business.dto'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common'
 
 import {
   ReturnBusinessDto,
@@ -45,10 +57,15 @@ export class BusinessController {
   @ApiResponse({ status: 403, description: 'Sem acesso!' })
   @Roles(UserType.Admin, UserType.Common, UserType.Root)
   @Get()
-  async findAll(): Promise<ReturnBusinessDto[]> {
-    return (await this.businessService.findAll()).map(
-      (businessEntity) => new ReturnBusinessDto(businessEntity),
-    )
+  async findAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 100,
+    @Query('order') order: 'ASC' | 'DESC',
+    @Query('filter') filter: FilterBusinessDto,
+  ): Promise<Pagination<Business>> {
+    limit = limit > 100 ? 100 : limit
+
+    return await this.businessService.findAll({ page, limit }, order, filter)
   }
 
   @ApiBody({ type: CreateBusinessDto })

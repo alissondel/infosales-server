@@ -8,7 +8,8 @@ import { User } from 'src/users/entities/user.entity'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { LoginPayload } from './dto/login-payload.dto'
 import { ReturnUserDto } from 'src/users/dto/return-user.dto'
-
+import { UnauthorizedError } from 'src/commom/errors/types/UnauthorizedError'
+import { authorizantionToLoginPayload } from '../utils/converter/base-64-converter'
 @Injectable()
 export class AuthService {
   constructor(
@@ -32,5 +33,60 @@ export class AuthService {
       }),
       user: new ReturnUserDto(user),
     }
+  }
+
+  async refresh(token: string) {
+    const payload: User = await this.verifyRefreshToken(token)
+    return this.generarToken(payload)
+  }
+
+  private async verifyRefreshToken(token: any) {
+    const refreshToken = token
+
+    if (!refreshToken) {
+      throw new NotFoundError('Usuário não encontrado')
+    }
+
+    const payload = authorizantionToLoginPayload(refreshToken)
+    const user = await this.userService.findEmail(payload.email)
+
+    if (!user) {
+      throw new NotFoundError('Usuário não encontrado')
+    }
+
+    try {
+      this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_SECRET,
+      })
+
+      return user
+    } catch (err) {
+      if (err.name === 'JsonWebTokenError') {
+        throw new UnauthorizedError('Assinatura Inválida')
+      }
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedError('Token Expirado')
+      }
+      throw new UnauthorizedError(err.name)
+    }
+  }
+
+  async generarToken(payload: User) {
+    const accessToken = this.jwtService.sign(
+      { email: payload.email },
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      },
+    )
+
+    const refreshToken = this.jwtService.sign(
+      { email: payload.email },
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRES_IN,
+      },
+    )
+    return { access_token: accessToken, refresh_token: refreshToken }
   }
 }

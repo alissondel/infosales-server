@@ -1,3 +1,14 @@
+import { Roles } from 'src/decorators/roles.decorator'
+import { UserId } from 'src/decorators/user-id-decorator'
+import { Address } from './entities/address.entity'
+import { UserType } from 'src/users/enum/user-type.enum'
+import { Pagination } from 'nestjs-typeorm-paginate'
+import { AddressesService } from './addresses.service'
+import { CreateAddressDto } from './dto/create-address.dto'
+import { UpdateAddressDto } from './dto/update-address.dto'
+import { ReturnAddressDto } from './dto/return-address.dto'
+import { FilterAddressDto } from './dto/filter-address.dto'
+
 import {
   Controller,
   Get,
@@ -8,16 +19,6 @@ import {
   Delete,
   Query,
 } from '@nestjs/common'
-import { AddressesService } from './addresses.service'
-import { CreateAddressDto } from './dto/create-address.dto'
-import { UpdateAddressDto } from './dto/update-address.dto'
-import { UserId } from 'src/decorators/user-id-decorator'
-import { Roles } from 'src/decorators/roles.decorator'
-import { UserType } from 'src/users/enum/user-type.enum'
-import { Pagination } from 'nestjs-typeorm-paginate'
-import { Address } from './entities/address.entity'
-import { ReturnAddressDto } from './dto/return-address.dto'
-
 @Controller('addresses')
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
@@ -34,23 +35,11 @@ export class AddressesController {
     @Query('page') page = 1,
     @Query('limit') limit = 100,
     @Query('order') order: 'ASC' | 'DESC',
-    @Query('id') id: string,
-    @Query('name') name: string,
-    @Query('status') status: boolean,
-    @Query('cityName') cityName: string,
-    @Query('userName') userName: string,
+    @Query('filter') filter: FilterAddressDto,
   ): Promise<Pagination<Address>> {
     limit = limit > 100 ? 100 : limit
 
-    return await this.addressesService.findAll(
-      { page, limit },
-      order,
-      id,
-      name,
-      status,
-      cityName,
-      userName,
-    )
+    return await this.addressesService.findAll({ page, limit }, order, filter)
   }
 
   @Roles(UserType.Admin)

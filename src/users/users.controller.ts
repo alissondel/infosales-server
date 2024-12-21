@@ -2,18 +2,31 @@ import { User } from './entities/user.entity'
 import { Roles } from 'src/decorators/roles.decorator'
 import { UserId } from 'src/decorators/user-id-decorator'
 import { UserType } from './enum/user-type.enum'
+import { Response } from 'express'
+import { HelperFile } from 'src/shared/helper'
+import { existsSync } from 'fs'
 import { Pagination } from 'nestjs-typeorm-paginate'
+import { diskStorage } from 'multer'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { UsersService } from './users.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { UpdatePasswordDto } from './dto/update-password.dto'
+import { FilterUserDto } from './dto/filter-user.dto'
 
 import {
   ReturnUserDto,
   ReturnUserUpdatedDto,
   ReturnUserDeletedDto,
 } from './dto/return-user.dto'
+
+import {
+  ApiBody,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import {
   Body,
@@ -30,18 +43,6 @@ import {
   Res,
   NotFoundException,
 } from '@nestjs/common'
-import { Response } from 'express'
-
-import {
-  ApiBody,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-} from '@nestjs/swagger'
-import { FileInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
-import { HelperFile } from 'src/shared/helper'
-import { existsSync } from 'fs'
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -85,22 +86,10 @@ export class UsersController {
     @Query('page') page = 1,
     @Query('limit') limit = 100,
     @Query('order') order: 'ASC' | 'DESC',
-    @Query('id') id: string,
-    @Query('name') name: string,
-    @Query('email') email: string,
-    @Query('typeUser') typeUser: number,
-    @Query('status') status: boolean,
+    @Query('filter') filter: FilterUserDto,
   ): Promise<Pagination<User>> {
     limit = limit > 100 ? 100 : limit
-    return await this.usersService.findAll(
-      { page, limit },
-      order,
-      id,
-      name,
-      email,
-      typeUser,
-      status,
-    )
+    return await this.usersService.findAll({ page, limit }, order, filter)
   }
 
   @Get('profile-image/:imagename')

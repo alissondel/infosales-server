@@ -1,16 +1,17 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
-import { CreateCompaniesToUsersDto } from './dto/create-companies_users.dto'
-import { UpdateCompaniesToUserDto } from './dto/update-companies_user.dto'
 import { Repository } from 'typeorm'
-import { CompaniesToUsers } from './entities/companies_users.entity'
-import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { UsersService } from 'src/users/users.service'
+import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
 import { CompaniesService } from 'src/companies/companies.service'
-import type { FilterCompaniesToUsersDto } from './dto/filter-companies_users.dto'
+import { CompaniesToUsers } from './entities/companies_users.entity'
+import { UpdateCompaniesToUserDto } from './dto/update-companies_user.dto'
+import { CreateCompaniesToUsersDto } from './dto/create-companies_users.dto'
+import { FilterCompaniesToUsersDto } from './dto/filter-companies_users.dto'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
+
 import {
   paginate,
-  type IPaginationOptions,
-  type Pagination,
+  IPaginationOptions,
+  Pagination,
 } from 'nestjs-typeorm-paginate'
 
 @Injectable()
@@ -30,8 +31,24 @@ export class CompaniesUsersService {
     const companyToUser = await this.companyToUserRepository.findOne({
       where: { id },
       relations: {
-        company: true,
         user: true,
+        company: true,
+      },
+    })
+
+    if (!companyToUser) {
+      throw new NotFoundError('Usuário e Empresa não encontrada!')
+    }
+
+    return companyToUser
+  }
+
+  async companiesToUsers(userId: string): Promise<CompaniesToUsers> {
+    const companyToUser = await this.companyToUserRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        user: true,
+        company: true,
       },
     })
 

@@ -58,10 +58,6 @@ export class User {
   @OneToMany(() => Address, (address) => address.user)
   addresses?: Address[]
 
-  @OneToMany(
-    () => CompaniesToUsers,
-    (companiesToUsersEntity) => companiesToUsersEntity.user,
-    { eager: true },
-  )
-  companiesToUsers: CompaniesToUsers[]
+  @OneToMany(() => CompaniesToUsers, (companyUser) => companyUser.user)
+  companies: CompaniesToUsers[]
 }

@@ -34,12 +34,28 @@ export class UsersService {
     return user
   }
 
+  async findUserWithCompanies(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: {
+        companies: {
+          company: true,
+        },
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundError('Usuário não existente')
+    }
+
+    return user
+  }
+
   async findEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: {
         addresses: true,
-        companiesToUsers: true,
       },
     })
 

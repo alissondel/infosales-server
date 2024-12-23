@@ -15,7 +15,6 @@ import {
 } from './dto/return-create-companies_users.dto'
 
 import {
-  Controller,
   Get,
   Post,
   Body,
@@ -23,6 +22,7 @@ import {
   Delete,
   Put,
   Query,
+  Controller,
 } from '@nestjs/common'
 
 @Controller('companies-users')
@@ -30,12 +30,12 @@ export class CompaniesUsersController {
   constructor(private readonly companiesUsersService: CompaniesUsersService) {}
 
   @Roles(UserType.Admin, UserType.Common, UserType.Root)
-  @Get('/companiestousers')
+  @Get('/companies_users')
   async findOneByToken(
     @UserId() userId: string,
   ): Promise<ReturnCompaniesToUsersDto> {
     return new ReturnCompaniesToUsersDto(
-      await this.companiesUsersService.findOne(userId),
+      await this.companiesUsersService.companiesToUsers(userId),
     )
   }
 

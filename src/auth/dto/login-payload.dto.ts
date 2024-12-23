@@ -1,5 +1,4 @@
 import { User } from 'src/users/entities/user.entity'
-
 export class LoginPayload {
   id: string
   name: string
@@ -8,7 +7,6 @@ export class LoginPayload {
   status: boolean
   createdAt: Date
   avatar_url: string
-  companyIds: string[]
 
   constructor(userEntity: User) {
     this.id = userEntity.id
@@ -18,8 +16,5 @@ export class LoginPayload {
     this.status = userEntity.status
     this.createdAt = userEntity.createdAt
     this.avatar_url = userEntity.avatar_url
-    this.companyIds = userEntity.companiesToUsers
-      ? userEntity.companiesToUsers.map((key) => key.companyId)
-      : []
   }
 }

@@ -39,3 +39,35 @@ export class ReturnCompaniesToUsersDeletedDto extends ReturnCompaniesToUsersDto 
     this.deletedAt = CompaniesToUsersEntity.deletedAt
   }
 }
+
+export class ReturnUserEntityDto {
+  id: string
+  status: boolean
+  createdAt: Date
+  company?: ReturnCompanyDto
+
+  constructor(CompaniesToUsersEntity: CompaniesToUsers) {
+    this.id = CompaniesToUsersEntity.id
+    this.status = CompaniesToUsersEntity.status
+    this.createdAt = CompaniesToUsersEntity.createdAt
+    this.company = CompaniesToUsersEntity.company
+      ? new ReturnCompanyDto(CompaniesToUsersEntity.company)
+      : undefined
+  }
+}
+
+export class ReturnCompanyEntityDto {
+  id: string
+  status: boolean
+  createdAt: Date
+  user?: ReturnUserDto
+
+  constructor(CompaniesToUsersEntity: CompaniesToUsers) {
+    this.id = CompaniesToUsersEntity.id
+    this.status = CompaniesToUsersEntity.status
+    this.createdAt = CompaniesToUsersEntity.createdAt
+    this.user = CompaniesToUsersEntity.user
+      ? new ReturnUserDto(CompaniesToUsersEntity.user)
+      : undefined
+  }
+}

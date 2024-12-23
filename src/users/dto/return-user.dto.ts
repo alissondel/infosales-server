@@ -1,4 +1,5 @@
 import { User } from '../entities/user.entity'
+import { ReturnUserEntityDto } from 'src/companies_users/dto/return-create-companies_users.dto'
 
 export class ReturnUserDto {
   id: string
@@ -33,5 +34,18 @@ export class ReturnUserDeletedDto extends ReturnUserDto {
   constructor(userEntity: User) {
     super(userEntity)
     this.deletedAt = userEntity.deletedAt
+  }
+}
+
+export class ReturnUserWithCompaniesDto extends ReturnUserDto {
+  companiesToUser: ReturnUserEntityDto[]
+
+  constructor(userEntity: User) {
+    super(userEntity)
+    this.companiesToUser = userEntity?.companies
+      ? userEntity?.companies.map(
+          (companyEntity) => new ReturnUserEntityDto(companyEntity),
+        )
+      : undefined
   }
 }

@@ -1,16 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { CreateCompanyDto } from './dto/create-company.dto'
-import { UpdateCompanyDto } from './dto/update-company.dto'
 import { Company } from './entities/company.entity'
 import { Repository } from 'typeorm'
 import { NotFoundError } from 'src/commom/errors/types/NotFoundError'
+import { Inject, Injectable } from '@nestjs/common'
+import { CreateCompanyDto } from './dto/create-company.dto'
+import { UpdateCompanyDto } from './dto/update-company.dto'
+import { FilterCompanyDto } from './dto/filter-company.dto'
+
 import {
   paginate,
   Pagination,
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate'
-import type { FilterCompanyDto } from './dto/filter-company.dto'
-
 @Injectable()
 export class CompaniesService {
   constructor(
@@ -22,6 +22,22 @@ export class CompaniesService {
     const company = await this.companyRepository.findOne({
       where: { id },
       relations: {
+        city: true,
+      },
+    })
+
+    if (!company) {
+      throw new NotFoundError('Empresa não encontrada!')
+    }
+
+    return company
+  }
+
+  async findCompanyWithUsers(id: string): Promise<Company> {
+    const company = await this.companyRepository.findOne({
+      where: { id },
+      relations: {
+        users: true,
         city: true,
       },
     })

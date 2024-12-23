@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm'
 
 import { User } from 'src/users/entities/user.entity'
@@ -16,10 +17,10 @@ export class CompaniesToUsers {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column()
+  @Column({ name: 'company_id', nullable: false })
   companyId: string
 
-  @Column()
+  @Column({ name: 'user_id', nullable: false })
   userId: string
 
   @Column({ default: true, type: 'boolean' })
@@ -43,9 +44,13 @@ export class CompaniesToUsers {
   @Column({ name: 'deleted_user', type: 'varchar', nullable: true })
   deletedUser!: string
 
-  @ManyToOne(() => Company, (companyEntity) => companyEntity.companiesToUsers)
+  @ManyToOne(() => Company, (companyEntity) => companyEntity.users, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'company_id' })
   company: Company
 
-  @ManyToOne(() => User, (userEntity) => userEntity.companiesToUsers)
+  @ManyToOne(() => User, (userEntity) => userEntity.companies, { eager: true })
+  @JoinColumn({ name: 'user_id' })
   user: User
 }

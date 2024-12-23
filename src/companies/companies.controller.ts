@@ -24,6 +24,7 @@ import {
   ReturnCompanyDto,
   ReturnCompanyUpdatedDto,
   ReturnCompanyDeletedDto,
+  ReturnCompanyWithUsersDto,
 } from './dto/return-company.dto'
 
 @Controller('companies')
@@ -34,6 +35,16 @@ export class CompaniesController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ReturnCompanyDto> {
     return new ReturnCompanyDto(await this.companiesService.findOne(id))
+  }
+
+  @Roles(UserType.Admin, UserType.Common, UserType.Root)
+  @Get('/CompanyWithUsers/:id')
+  async findCompanyWithUsers(
+    @Param('id') id: string,
+  ): Promise<ReturnCompanyWithUsersDto> {
+    return new ReturnCompanyWithUsersDto(
+      await this.companiesService.findCompanyWithUsers(id),
+    )
   }
 
   @Roles(UserType.Admin, UserType.Common, UserType.Root)

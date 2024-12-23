@@ -70,9 +70,6 @@ export class Company {
   @JoinColumn({ name: 'city_id', referencedColumnName: 'id' })
   city?: City
 
-  @OneToMany(
-    () => CompaniesToUsers,
-    (companiesToUsersEntity) => companiesToUsersEntity.company,
-  )
-  companiesToUsers: CompaniesToUsers[]
+  @OneToMany(() => CompaniesToUsers, (companyUser) => companyUser.company)
+  users: CompaniesToUsers[]
 }

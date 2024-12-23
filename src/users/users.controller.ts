@@ -19,6 +19,7 @@ import {
   ReturnUserDto,
   ReturnUserUpdatedDto,
   ReturnUserDeletedDto,
+  ReturnUserWithCompaniesDto,
 } from './dto/return-user.dto'
 
 import {
@@ -58,6 +59,16 @@ export class UsersController {
   @Get('/userId')
   async userTokenId(@UserId() userId: string): Promise<ReturnUserDto> {
     return new ReturnUserDto(await this.usersService.findOne(userId))
+  }
+
+  @Roles(UserType.Common, UserType.Root, UserType.Admin)
+  @Get('/userWithCompanies')
+  async findUserWithCompanies(
+    @UserId() userId: string,
+  ): Promise<ReturnUserWithCompaniesDto> {
+    return new ReturnUserWithCompaniesDto(
+      await this.usersService.findUserWithCompanies(userId),
+    )
   }
 
   @ApiBearerAuth('KEY_AUTH')
